@@ -1,0 +1,10 @@
+# 게임 실행 (PC)
+pygame-ce
+numpy
+
+# AI 학습·평가 도구 (train.py, tools/eval_ai.py 등) 에만 필요
+# torch
+
+# 웹 빌드 (tools/build_web.py, tools/subset_fonts.py)
+# pygbag
+# fonttools
