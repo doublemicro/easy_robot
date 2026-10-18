@@ -2,7 +2,11 @@
 
 게임 규칙과는 무관하고 pygame 화면에만 쓴다.
 """
+from __future__ import annotations
+
 import pygame
+import pygame.font  # (v16) 브라우저(pygbag)에선 하위 모듈을 직접 불러와야 함
+import pygame.transform
 
 from . import fonts
 
