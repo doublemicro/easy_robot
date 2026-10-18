@@ -33,8 +33,6 @@ import os
 import random
 
 import pygame
-import pygame.font  # (v16) 브라우저(pygbag)에선 하위 모듈을 직접 불러와야 함
-import pygame.transform
 
 from game import config as C
 from game import ui

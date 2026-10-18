@@ -11,8 +11,6 @@ import random
 import sys
 
 import pygame
-import pygame.font  # (v16) 브라우저(pygbag)에선 하위 모듈을 직접 불러와야 함
-import pygame.transform
 from pygame import gfxdraw
 
 from . import arena

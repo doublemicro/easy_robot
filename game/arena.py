@@ -12,9 +12,6 @@ import math
 import random
 
 import pygame
-import pygame.font  # (v16) 브라우저(pygbag)에선 하위 모듈을 직접 불러와야 함
-import pygame.transform
-import pygame.surfarray
 from pygame import gfxdraw
 
 from . import config as C
