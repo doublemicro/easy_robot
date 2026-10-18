@@ -23,7 +23,7 @@ from pathlib import Path
 # do not rename
 async def custom_site():
     import embed
-    platform.document.body.style.background = "#7f7f7f"
+    platform.document.body.style.background = "#07080c"
 
     platform.window.transfer.hidden = true
     platform.window.canvas.style.visibility = "visible"
@@ -434,5 +434,36 @@ frameborder="1"
 
     </script>
 
+
+<style>
+  html, body { background: #07080c !important; overflow: hidden; }
+  #canvas { position: fixed !important; left: 50% !important; top: 50% !important;
+            margin: 0 !important; transform: translate(-50%, -50%);
+            width: var(--gw, 960px) !important; height: var(--gh, 540px) !important; }
+  #canvas:focus { outline: none; }
+  #canvas.crisp { image-rendering: pixelated; image-rendering: crisp-edges; }
+</style>
+<script>
+(function () {
+  const GW = 960, GH = 540;
+  function fit() {
+    const dpr = window.devicePixelRatio || 1;
+    const k = Math.floor(Math.min(window.innerWidth * dpr / GW, window.innerHeight * dpr / GH));
+    let w, h;
+    if (k >= 1) { w = GW * k / dpr; h = GH * k / dpr; }      // 화면 픽셀 정수 배
+    else {                                                   // 창이 더 작음 → 맞춰 줄임
+      const s = Math.min(window.innerWidth / GW, window.innerHeight / GH);
+      w = GW * s; h = GH * s;
+    }
+    document.documentElement.style.setProperty("--gw", w + "px");
+    document.documentElement.style.setProperty("--gh", h + "px");
+    const c = document.getElementById("canvas");
+    if (c) c.classList.toggle("crisp", k >= 2);
+  }
+  window.addEventListener("resize", fit);
+  setInterval(fit, 500);       // 게임이 캔버스를 처음 만들 때·모니터를 옮길 때(배율 변경)도 맞춘다
+  fit();
+})();
+</script>
 </body>
 </html>

@@ -32,6 +32,55 @@ def copy(rel):
     shutil.copy2(os.path.join(ROOT, rel), dst)
 
 
+# (v18) 화면 선명하게: pygbag 기본은 960x540 그림을 창 크기에 맞춰 늘려서(소수 배율) 흐릿하다.
+# → 캔버스 표시 크기를 CSS(!important)로 덮어쓴다 (pygbag의 크기 조절은 그대로 두되 결과만 바꿈). 실제 화면 픽셀 기준으로 정수 배율(1배, 2배, ...)만 쓰고,
+#   2배 이상은 픽셀을 그대로 키운다(pixelated) → 창이 커져도 흐려지지 않음. 창이 960x540보다 작을 때만 줄여서 맞춤.
+CANVAS_JS = """
+<style>
+  html, body { background: #07080c !important; overflow: hidden; }
+  #canvas { position: fixed !important; left: 50% !important; top: 50% !important;
+            margin: 0 !important; transform: translate(-50%, -50%);
+            width: var(--gw, 960px) !important; height: var(--gh, 540px) !important; }
+  #canvas:focus { outline: none; }
+  #canvas.crisp { image-rendering: pixelated; image-rendering: crisp-edges; }
+</style>
+<script>
+(function () {
+  const GW = __GW__, GH = __GH__;
+  function fit() {
+    const dpr = window.devicePixelRatio || 1;
+    const k = Math.floor(Math.min(window.innerWidth * dpr / GW, window.innerHeight * dpr / GH));
+    let w, h;
+    if (k >= 1) { w = GW * k / dpr; h = GH * k / dpr; }      // 화면 픽셀 정수 배
+    else {                                                   // 창이 더 작음 → 맞춰 줄임
+      const s = Math.min(window.innerWidth / GW, window.innerHeight / GH);
+      w = GW * s; h = GH * s;
+    }
+    document.documentElement.style.setProperty("--gw", w + "px");
+    document.documentElement.style.setProperty("--gh", h + "px");
+    const c = document.getElementById("canvas");
+    if (c) c.classList.toggle("crisp", k >= 2);
+  }
+  window.addEventListener("resize", fit);
+  setInterval(fit, 500);       // 게임이 캔버스를 처음 만들 때·모니터를 옮길 때(배율 변경)도 맞춘다
+  fit();
+})();
+</script>
+"""
+
+
+def patch_index(path):
+    from game.render import SCREEN_H, SCREEN_W
+    with open(path, encoding="utf-8") as fp:
+        html = fp.read()
+    html = html.replace('platform.document.body.style.background = "#7f7f7f"',
+                        'platform.document.body.style.background = "#07080c"')
+    html = html.replace("</body>", CANVAS_JS.replace("__GW__", str(SCREEN_W)).replace("__GH__", str(SCREEN_H)) + "</body>")
+    assert "#07080c" in html and "const GW" in html, "pygbag index.html 형식이 바뀜"
+    with open(path, "w", encoding="utf-8") as fp:
+        fp.write(html)
+
+
 def main():
     shutil.rmtree(SRC, ignore_errors=True)
     os.makedirs(SRC)
@@ -56,6 +105,7 @@ def main():
         if os.path.isfile(p):
             os.remove(p)
     shutil.copytree(os.path.join(SRC, "build", "web"), OUT, dirs_exist_ok=True)
+    patch_index(os.path.join(OUT, "index.html"))
     for p in sorted(glob.glob(os.path.join(OUT, "*"))):
         print(f"  {os.path.relpath(p, ROOT)}  {os.path.getsize(p) // 1024} KB")
 
