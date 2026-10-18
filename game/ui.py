@@ -77,6 +77,24 @@ def panel(surf, rect, alpha=200, radius=10, border=(54, 58, 78)):
     surf.blit(s, r)
 
 
+def mouse_focus(buttons, ev, focus):
+    """(v17) 메뉴 선택: 마우스가 올라간 버튼으로 선택을 옮긴다. 버튼 밖이면 원래 선택을 그대로 둔다.
+    그래서 메뉴에는 언제나 선택된 버튼이 하나 있고, Enter를 누르면 그 버튼이 실행된다.
+    buttons: [(이름, Button), ...]"""
+    if ev.type == pygame.MOUSEMOTION:
+        for i, (_, b) in enumerate(buttons):
+            if b.enabled and b.rect.collidepoint(ev.pos):
+                return i
+    return focus
+
+
+def sync_focus(buttons, focus):
+    """선택 표시를 맞춘다 (매 프레임). 강조는 선택된 버튼 하나만 (마우스 hover는 mouse_focus가 선택으로 바꿔 줌)."""
+    for i, (_, b) in enumerate(buttons):
+        b.focus = (i == focus)
+        b.hover = False
+
+
 class Button:
     """마우스 버튼. 누른 채로 버튼 안에서 떼야 클릭으로 친다.
 
@@ -111,7 +129,7 @@ class Button:
         lit = self.enabled and (self.hover or self.focus)
         self._glow += ((1.0 if lit else 0.0) - self._glow) * 0.3
         g = self._glow
-        r = self.rect.move(0, 1 if self._down and self.hover else 0)
+        r = self.rect.move(0, 1 if self._down and (self.hover or self.focus) else 0)
         base = (30, 33, 46) if self.enabled else (24, 26, 34)
         fill = tuple(int(b + (a * 0.22 - b * 0.0) * g) for a, b in zip(self.accent, base))
         pygame.draw.rect(surf, fill, r, border_radius=8)

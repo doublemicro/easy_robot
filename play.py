@@ -220,7 +220,7 @@ class MenuScene(Scene):
             ("quit", ui.Button((x + w - half, 400, half, 40), ui.T("종료", "QUIT"), size=17,
                                accent=(150, 154, 172))),
         ]
-        self.focus = None
+        self.focus = self._enabled()[0]     # 처음부터 첫 버튼이 선택돼 있다 → 바로 Enter 가능
 
     def _enabled(self):
         return [i for i, (_, b) in enumerate(self.buttons) if b.enabled]
@@ -236,15 +236,14 @@ class MenuScene(Scene):
             except RuntimeError as e:          # 못 불러오면 버튼을 끄고 이유를 보여 준다
                 b = dict(self.buttons)["ai"]
                 b.enabled, b.sub = False, str(e)
-                self.focus = None
+                self.focus = self._enabled()[0]
         elif name == "controls":
             self.app.goto(ControlsScene(self.app))
         elif name == "quit":
             self.app.running = False
 
     def handle(self, ev):
-        if ev.type == pygame.MOUSEMOTION:
-            self.focus = None
+        self.focus = ui.mouse_focus(self.buttons, ev, self.focus)
         for name, b in self.buttons:
             if b.handle(ev):
                 self._go(name)
@@ -253,10 +252,8 @@ class MenuScene(Scene):
             en = self._enabled()
             if ev.key in (pygame.K_DOWN, pygame.K_s, pygame.K_UP, pygame.K_w):
                 step = 1 if ev.key in (pygame.K_DOWN, pygame.K_s) else -1
-                if self.focus is None:
-                    self.focus = en[0] if step > 0 else en[-1]
-                else:
-                    self.focus = en[(en.index(self.focus) + step) % len(en)]
+                cur = en.index(self.focus) if self.focus in en else -1
+                self.focus = en[(cur + step) % len(en)]
             elif ev.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE) and self.focus is not None:
                 self._go(self.buttons[self.focus][0])
             elif ev.key == pygame.K_1:
@@ -272,8 +269,7 @@ class MenuScene(Scene):
 
     def update(self):
         self.renderer.update(self.world, self.world.step(Act.IDLE, Act.IDLE))
-        for i, (_, b) in enumerate(self.buttons):
-            b.focus = (i == self.focus)
+        ui.sync_focus(self.buttons, self.focus)
 
     def draw(self, scr):
         self.renderer.draw(self.world)
@@ -316,6 +312,7 @@ class BotSelectScene(MenuScene):
                                                  accent=col, key_hint=str(i + 1))))
         self.buttons.append(("back", ui.Button((x + 90, 436, w - 180, 40), ui.T("뒤로", "BACK"),
                                                size=17, accent=(150, 154, 172), key_hint="Esc")))
+        self.focus = 0
 
     def _go(self, name):
         if name == "back":
@@ -497,8 +494,7 @@ class FightScene(Scene):
             self.on_button("menu")
 
     def _pause_handle(self, ev):
-        if ev.type == pygame.MOUSEMOTION:
-            self.pause_focus = None
+        self.pause_focus = ui.mouse_focus(self.pause_buttons, ev, self.pause_focus)
         for name, b in self.pause_buttons:
             if b.handle(ev):
                 self._pause_pick(name)
@@ -526,8 +522,8 @@ class FightScene(Scene):
         pw = max(340, hint_w + 40)                     # 키 설명이 길면(훈련장) 패널을 넓힌다
         ui.panel(scr, (SCREEN_W // 2 - pw // 2, 120, pw, 300 + 20 * len(self.PAUSE_HINT)), alpha=225)
         ui.text(scr, ui.T("일시정지", "PAUSED"), (SCREEN_W // 2, 156), 28, ui.WHITE, True, "center")
-        for k, (_, b) in enumerate(self.pause_buttons):
-            b.focus = (k == self.pause_focus)
+        ui.sync_focus(self.pause_buttons, self.pause_focus)
+        for _, b in self.pause_buttons:
             b.draw(scr)
         for k, (ko, en) in enumerate(self.PAUSE_HINT):
             ui.text(scr, ui.T(ko, en), (SCREEN_W // 2, 414 + 20 * k), 13, (140, 144, 162), anchor="center")
@@ -960,13 +956,12 @@ class VictoryScene(Scene):
             self.app.goto(MenuScene(self.app))
 
     def handle(self, ev):
-        if ev.type == pygame.MOUSEMOTION:
-            self.focus = None
+        self.focus = ui.mouse_focus(self.buttons, ev, self.focus)
         for name, b in self.buttons:
             if b.handle(ev):
                 self._go(name)
                 return
-        if ev.type != pygame.KEYDOWN or self.t < 20:         # 넘어오자마자 누른 키는 무시
+        if ev.type != pygame.KEYDOWN or self.t < 20:        # 넘어오자마자 누른 키는 무시
             return
         keys = {pygame.K_r: "rematch", pygame.K_c: "change", pygame.K_ESCAPE: "menu"}
         if ev.key in keys:
@@ -1027,10 +1022,10 @@ class VictoryScene(Scene):
                 col = (255, 214, 120) if best else ui.WHITE
                 ui.text(scr, str(v[i]), (cx, y - 1), 17, col, best, "midtop")
             y += 40
-        for k, (_, b) in enumerate(self.buttons):
-            b.focus = (k == self.focus)
+        ui.sync_focus(self.buttons, self.focus)
+        for _, b in self.buttons:
             b.draw(scr)
-        if self.t < 24:                                     # 검은 화면에서 밝아짐
+        if self.t < 24:                                    # 검은 화면에서 밝아짐
             fade = pygame.Surface((SCREEN_W, SCREEN_H))
             fade.set_alpha(int(255 * (1 - self.t / 24)))
             scr.blit(fade, (0, 0))

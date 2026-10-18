@@ -23,6 +23,13 @@ python tools/pose_sheet.py    # 행동별 모션을 한 장의 이미지로 (pos
 python tools/startup_strip.py # 공격 시작 후 0~17프레임 화면 (startup_strip.png)
 ```
 
+## v17: 메뉴 Enter로 바로 실행 (2026-10-18)
+
+- game/ 쪽만 (play.py, game/ui.py). 규칙·AI는 그대로.
+- 전에는 메뉴에 들어가도 선택된 버튼이 없고, 마우스를 움직이면 선택이 풀려서 Enter가 안 먹었다 (특히 웹에서).
+- 이제 메뉴·봇 선택·일시정지·승리 화면 모두 **처음부터 첫 버튼이 선택**돼 있고, Enter(또는 Space)를 누르면 그 버튼이 실행된다.
+- ↑/↓로 선택을 옮기고, 마우스를 버튼 위에 올리면 선택이 그 버튼으로 옮겨진다 (강조 표시는 항상 하나). `ui.mouse_focus`, `ui.sync_focus`
+
 ## v16: 웹 버전 + GitHub/Vercel 배포 준비 (2026-10-18)
 
 - AI를 numpy로 돌림 (`ai/policy_np.py`, `models/ai.npz`). PyTorch와 결과 같음 (로짓 차이 0.00001 이하, 행동 100% 일치).
