@@ -2,11 +2,5 @@
   "framework": null,
   "installCommand": "echo no-install",
   "buildCommand": "echo prebuilt-web",
-  "outputDirectory": "web",
-  "headers": [
-    {
-      "source": "/(.*)\.(apk|tar\.gz)",
-      "headers": [{ "key": "Content-Type", "value": "application/octet-stream" }]
-    }
-  ]
+  "outputDirectory": "web"
 }
