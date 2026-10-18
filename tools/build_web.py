@@ -50,8 +50,12 @@ def main():
     print(" ".join(cmd))
     env = dict(os.environ, PYTHONUTF8="1")       # 윈도우에서 pygbag가 한글 소스를 cp949로 읽다 깨지는 것 방지
     subprocess.run(cmd, check=True, env=env)
-    shutil.rmtree(OUT, ignore_errors=True)
-    shutil.copytree(os.path.join(SRC, "build", "web"), OUT)
+    # web/ 폴더 자체는 지우지 않고 안의 파일만 바꾼다 (OneDrive가 폴더를 잡고 있으면 폴더 삭제가 실패함)
+    os.makedirs(OUT, exist_ok=True)
+    for p in glob.glob(os.path.join(OUT, "*")):
+        if os.path.isfile(p):
+            os.remove(p)
+    shutil.copytree(os.path.join(SRC, "build", "web"), OUT, dirs_exist_ok=True)
     for p in sorted(glob.glob(os.path.join(OUT, "*"))):
         print(f"  {os.path.relpath(p, ROOT)}  {os.path.getsize(p) // 1024} KB")
 
